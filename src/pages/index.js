@@ -111,6 +111,54 @@ const GalleryGrid = styled.div`
   }
 `;
 
+// Lightbox modal
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 24px;
+`;
+
+const ModalContent = styled.div`
+  position: relative;
+  max-width: 92vw;
+  max-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ModalImage = styled.img`
+  width: 90vw;
+  max-width: 100%;
+  max-height: 90vh;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  display: block;
+`;
+
+const ModalClose = styled.button`
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #fff;
+  border-radius: 50%;
+  border: none;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+`;
+
 // ===== Reviews Section =====
 const ReviewsSection = styled.section`
   padding: 80px 20px;
@@ -300,10 +348,24 @@ export default function Home() {
     },
   ];
 
+  // Lightbox state
+  const [lightbox, setLightbox] = useState({ open: false, src: "" });
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setLightbox({ open: false, src: "" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <>
       <Navbar />
       <Hero />
+
+      {/* Lightbox state is managed in this component */}
+      {/* We'll use a little local state and event handlers below */}
 
       {/* Services */}
       <ServicesSection id="services">
@@ -327,7 +389,18 @@ export default function Home() {
           <GalleryTitle>Our Spa Gallery</GalleryTitle>
           <GalleryGrid>
             {gallery.map((src, i) => (
-              <img key={i} src={src} alt={`Spa ${i + 1}`} />
+              <img
+                key={i}
+                src={src}
+                alt={`Spa ${i + 1}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => setLightbox({ open: true, src })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    setLightbox({ open: true, src });
+                }}
+              />
             ))}
           </GalleryGrid>
         </Reveal>
@@ -349,6 +422,20 @@ export default function Home() {
       </ReviewsSection>
 
       {/* Footer */}
+      {lightbox.open && (
+        <ModalOverlay onClick={() => setLightbox({ open: false, src: "" })}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalImage src={lightbox.src} alt="Expanded gallery" />
+            <ModalClose
+              onClick={() => setLightbox({ open: false, src: "" })}
+              aria-label="Close"
+            >
+              ×
+            </ModalClose>
+          </ModalContent>
+        </ModalOverlay>
+      )}
+
       <Footer />
     </>
   );
