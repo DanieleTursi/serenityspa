@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 import Hero from "../components/Hero";
 import Navbar from "../components/Navbar";
@@ -153,6 +153,66 @@ const ReviewCard = styled.div`
   }
 `;
 
+// Reveal on scroll helper with direction and delay support
+// Reveal on scroll helper with direction and delay support
+const RevealBox = styled.div`
+  opacity: ${(p) => (p.in ? 1 : 0)};
+  transform: ${(p) => {
+    if (p.in) return "none";
+    if (p.dir === "left") return "translateX(-18px)";
+    if (p.dir === "right") return "translateX(18px)";
+    return "translateY(18px)";
+  }};
+  transition: opacity 700ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 700ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  transition-delay: ${(p) => (p.delay ? `${p.delay}ms` : "0ms")};
+  will-change: opacity, transform;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+`;
+
+function Reveal({
+  children,
+  threshold = 0.12,
+  rootMargin = "0px 0px -8% 0px",
+  dir = "up",
+  delay = 0,
+}) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.unobserve(el);
+        }
+      },
+      { threshold, rootMargin }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold, rootMargin]);
+
+  return (
+    <RevealBox ref={ref} in={inView} dir={dir} delay={delay}>
+      {children}
+    </RevealBox>
+  );
+}
+
 export default function Home() {
   const services = [
     {
@@ -247,39 +307,45 @@ export default function Home() {
 
       {/* Services */}
       <ServicesSection id="services">
-        <ServicesTitle>Our Treatments</ServicesTitle>
-        <ServicesGrid>
-          {services.map((s, i) => (
-            <ServiceCard key={i}>
-              <h3>{s.name}</h3>
-              <p>{s.desc}</p>
-              <span>{s.price}</span>
-            </ServiceCard>
-          ))}
-        </ServicesGrid>
+        <Reveal>
+          <ServicesTitle>Our Treatments</ServicesTitle>
+          <ServicesGrid>
+            {services.map((s, i) => (
+              <ServiceCard key={i}>
+                <h3>{s.name}</h3>
+                <p>{s.desc}</p>
+                <span>{s.price}</span>
+              </ServiceCard>
+            ))}
+          </ServicesGrid>
+        </Reveal>
       </ServicesSection>
 
       {/* Gallery */}
       <GallerySection id="gallery">
-        <GalleryTitle>Our Spa Gallery</GalleryTitle>
-        <GalleryGrid>
-          {gallery.map((src, i) => (
-            <img key={i} src={src} alt={`Spa ${i + 1}`} />
-          ))}
-        </GalleryGrid>
+        <Reveal>
+          <GalleryTitle>Our Spa Gallery</GalleryTitle>
+          <GalleryGrid>
+            {gallery.map((src, i) => (
+              <img key={i} src={src} alt={`Spa ${i + 1}`} />
+            ))}
+          </GalleryGrid>
+        </Reveal>
       </GallerySection>
 
       {/* Reviews */}
       <ReviewsSection id="reviews">
-        <ReviewsTitle>Client Testimonials</ReviewsTitle>
-        <ReviewsGrid>
-          {reviews.map((r, i) => (
-            <ReviewCard key={i}>
-              <p>{r.text}</p>
-              <h4>{r.author}</h4>
-            </ReviewCard>
-          ))}
-        </ReviewsGrid>
+        <Reveal>
+          <ReviewsTitle>Client Testimonials</ReviewsTitle>
+          <ReviewsGrid>
+            {reviews.map((r, i) => (
+              <ReviewCard key={i}>
+                <p>{r.text}</p>
+                <h4>{r.author}</h4>
+              </ReviewCard>
+            ))}
+          </ReviewsGrid>
+        </Reveal>
       </ReviewsSection>
 
       {/* Footer */}
