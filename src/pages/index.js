@@ -148,6 +148,8 @@ const ModalClose = styled.button`
   top: -10px;
   right: -10px;
   background: #fff;
+  color: #000;
+  font-size: 30px;
   border-radius: 50%;
   border: none;
   width: 40px;
